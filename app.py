@@ -13,9 +13,6 @@ def main():
     if not os.path.isfile(FILENAME):
         create_expenses_file(FILENAME)
 
-#    add_exp = str(input("Do you want to add a new expense? (Y/N): "))
-#    if add_exp == 'Y':
-
     # Get the name of expense
     name = get_expense_name()
 
@@ -75,10 +72,6 @@ def summarize_expenses():
     df = pd.read_csv(FILE_PATH)
     total_expenses = pd.DataFrame({'Name': 'Total', 'Amount': df['Amount'].sum()}, index=[0])
     total_expenses.to_csv(FILENAME, mode='a', index=False, header=False)
-#    print(f"""The expenses are: \n {df}\n
-#          Total: {df['Amount'].sum()}""")
 
 if __name__ == "__main__":
-    # import argparse
-    # parser = argparse.ArgumentParser("Run Expense App")
     main()
