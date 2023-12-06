@@ -2,16 +2,26 @@ import csv
 import os
 import os.path as osp
 import pandas as pd
-
+from datetime import datetime
+from flask import Flask
 from Expenses import Expense
 
 FILENAME = 'Expenses.csv'
 FILE_PATH = osp.dirname(osp.abspath(__file__)) + '\\' + FILENAME
 
+app = Flask(__name__)
+
+@app.route("/expenses")
+def hello_world():
+    return "<p> Hello, World!</p>"
+
 def main():
     # Check if the expenses file already exists 
     if not os.path.isfile(FILENAME):
         create_expenses_file(FILENAME)
+
+    # Get the expense date
+    date = get_date()
 
     # Get the name of expense
     name = get_expense_name()
@@ -23,7 +33,8 @@ def main():
     category = get_expense_category()
 
     # Write it to a csv file
-    write_expenses_to_file(name, amount, category)
+    data = {"date": date, "name": name, "amount": amount, "category": category}
+    write_expenses_to_file(data)
 
     # Read the file and summarize all the expenses
     summarize_expenses()
@@ -32,7 +43,10 @@ def main():
 def create_expenses_file(filename):
     with open(filename, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['Name', 'Amount', 'Category'])
+        writer.writerow(['Date', 'Name', 'Amount', 'Category'])
+
+def get_date():
+    return datetime.today().date()
 
 def get_expense_name():
     name = str(input("Insert expense name: "))
@@ -52,13 +66,13 @@ def get_expense_category():
                       
     return categories[category]
 
-def write_expenses_to_file(name, amount, category):
-    expense = Expense(name, amount, category)
+def write_expenses_to_file(data):
+    expense = Expense(data)
     new_exp_df = pd.DataFrame(expense.data, index=[0])
     
     # First, check if expenses had been totalized
     cur_df = pd.read_csv(FILE_PATH)
-    if len(cur_df) > 1 and cur_df.iloc[-1]['Name'] == 'Total':
+    if len(cur_df) > 1 and cur_df.iloc[-1]['Date'] == 'Total':
         # Delete 'Total' row before adding a new expense
         cur_df.drop(cur_df.tail(1).index, inplace=True)
         cur_df.to_csv(FILENAME, mode='w', index=False, header=True)
@@ -70,7 +84,7 @@ def write_expenses_to_file(name, amount, category):
 
 def summarize_expenses():
     df = pd.read_csv(FILE_PATH)
-    total_expenses = pd.DataFrame({'Name': 'Total', 'Amount': df['Amount'].sum()}, index=[0])
+    total_expenses = pd.DataFrame({'Date': 'Total', 'Amount': df['Amount'].sum()}, index=[0])
     total_expenses.to_csv(FILENAME, mode='a', index=False, header=False)
 
 if __name__ == "__main__":
