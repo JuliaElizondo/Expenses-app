@@ -1,91 +1,83 @@
-import csv
+import sqlite3
 import os
 import os.path as osp
 import pandas as pd
 from datetime import datetime
-from flask import Flask
 from Expenses import Expense
+from flask import Flask, render_template, g, request, redirect, url_for
 
-FILENAME = 'Expenses.csv'
-FILE_PATH = osp.dirname(osp.abspath(__file__)) + '\\' + FILENAME
+# APP
+app = Flask(__name__, template_folder="templates", static_folder='static')
+# DATABASE
+DATABASE = osp.dirname(osp.abspath(__file__)) + '\\' + 'expenses.db'
 
-app = Flask(__name__)
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
 
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+
+@app.route("/")
 @app.route("/expenses")
-def hello_world():
-    return "<p> Hello, World!</p>"
+def main_page():
+    # Get db entries
+    cursor = get_db().cursor()
+    cursor.execute("SELECT date, name, amount, category FROM expenses")
+    data_from_db = cursor.fetchall()
 
-def main():
-    # Check if the expenses file already exists 
-    if not os.path.isfile(FILENAME):
-        create_expenses_file(FILENAME)
-
-    # Get the expense date
-    date = get_date()
-
-    # Get the name of expense
-    name = get_expense_name()
-
-    # Get the amount of the expense
-    amount = get_expense_amount()
-
-    # Get the category of the expense
-    category = get_expense_category()
-
-    # Write it to a csv file
-    data = {"date": date, "name": name, "amount": amount, "category": category}
-    write_expenses_to_file(data)
-
-    # Read the file and summarize all the expenses
-    summarize_expenses()
+    return render_template('main_page.html', data=data_from_db)
 
 
-def create_expenses_file(filename):
-    with open(filename, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['Date', 'Name', 'Amount', 'Category'])
+@app.route('/add_expense', methods=['POST', 'GET'])
+def add_expense():
+    if request.method == 'POST':
+        date = datetime.today().date()
+        name = request.form.get('name')
+        amount = request.form.get('amount')
+        category = request.form.get('category')
 
-def get_date():
-    return datetime.today().date()
+        data = {"date": date, "name": name, "amount": amount, "category": category}
+        write_expenses_to_db(data)
 
-def get_expense_name():
-    name = str(input("Insert expense name: "))
-    return name
+        return redirect(url_for('main_page'))
+    else:
+        return render_template('add_expense_page.html')
 
-def get_expense_amount():
-    amount = float(input("Insert expense amount: "))
-    return amount
+@app.route('/delete_expense', methods=['DELETE', 'POST', 'GET'])
+def delete_expense():
+    if request.method == 'DELETE':
+        delete_expense_query = "DELETE FROM expenses"
+        cursor = get_db().cursor()
+        cursor.execute(delete_expense_query)
+        get_db().commit()
+        return redirect(url_for('main_page'))
+    else:
+         render_template('main_page.html')
 
-def get_expense_category():
-    # TODO: check code. Add checks to avoid bugs
-    categories = {1: "Food & Drink", 2: "Home", 3: "Transport", 4: "Health", 5: "Others"}
-    print("List of categories")
-    for num, cat in categories.items():
-          print(f"{num}. {cat}\n")
-    category = int(input("""Enter your expense category number from the list above: """)) 
-                      
-    return categories[category]
 
-def write_expenses_to_file(data):
-    expense = Expense(data)
-    new_exp_df = pd.DataFrame(expense.data, index=[0])
-    
-    # First, check if expenses had been totalized
-    cur_df = pd.read_csv(FILE_PATH)
-    if len(cur_df) > 1 and cur_df.iloc[-1]['Date'] == 'Total':
-        # Delete 'Total' row before adding a new expense
-        cur_df.drop(cur_df.tail(1).index, inplace=True)
-        cur_df.to_csv(FILENAME, mode='w', index=False, header=True)
-    
-    # Append new expense to the existing list
-    new_exp_df.to_csv(FILENAME, mode='a', index=False, header=False)
-    print(f"Expense written in {FILE_PATH}")
+def write_expenses_to_db(data):
+    cursor = get_db().cursor()
+    sql_insert_query = f"INSERT INTO expenses (date, name, amount, category) VALUES ('{data['date']}', '{data['name']}', '{data['amount']}', '{data['category']}')"
+    try:
+        cursor.execute(sql_insert_query)
+        get_db().commit()
+    except Exception as e:
+        print(f"Error executing query: {e}")
 
 
 def summarize_expenses():
-    df = pd.read_csv(FILE_PATH)
-    total_expenses = pd.DataFrame({'Date': 'Total', 'Amount': df['Amount'].sum()}, index=[0])
-    total_expenses.to_csv(FILENAME, mode='a', index=False, header=False)
+    cursor = get_db().cursor()
+    sql_query = "SELECT category, SUM(amount) FROM expenses GROUP BY category"
+    cursor.execute(sql_query)
+    df = pd.read_sql_query(sql_query, get_db())
+    print (df)
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
