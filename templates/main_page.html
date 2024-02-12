@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>Expenses Summary</h1>
+{% endblock %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Category</th>
+    </tr>
+    {% for row in data %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+        </tr>
+    {% endfor %}
+    <tr>
+        <td></td>
+        <td></td>
+        <td>
+            <button id="redirectButton">Add Expense</button>
+
+            <script>
+                document.getElementById('redirectButton').addEventListener('click', function() {
+                    redirectToAddExpense();
+                });
+
+                function redirectToAddExpense() {
+                    window.location.href = "{{ url_for('add_expense') }}";
+                }
+            </script>
+        </td>
+        <td>
+            <button id="deleteButton">Delete All Expenses</button>
+
+            <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+            <script>
+                $('#deleteButton').on('click', function() {
+                    deleteExpenses();
+                });
+
+                function deleteExpenses() {
+                    $.ajax({
+                        url: '/delete_expense',  
+                        type: 'DELETE',
+                        success: function(response) {
+                            alert('Gastos eliminados exitosamente.');
+                        },
+                        error: function(error) {
+                            alert('Error al eliminar gastos: ' + error.statusText);
+                        }
+                    });
+                }
+            </script>
+        </td>
+    </tr>
+</table>
+{% endblock %}
