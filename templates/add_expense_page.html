@@ -1,0 +1,30 @@
+<!-- add_expense_page.html -->
+{% extends 'base.html' %}
+{% block header %}
+<h1>Add Expenses</h1>
+{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('add_expense') }}" method="post">
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" required>
+    <br>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <br>
+    <label for="amount">Amount:</label>
+    <input type="number" step="0.01" id="amount" name="amount" required>
+    <br>
+    <label for="category">Category:</label>
+    <select id="category" name="category" required>
+        <option value="Food & Drink">Food & Drink </option>
+        <option value="Home">Home</option>
+        <option value="Clothes">Clothes</option>
+        <option value="Health">Health</option>
+        <option value="Others">Others</option>
+    <br>
+    </select>
+    <br>
+    <button type="submit">Add Expense</button>
+</form>
+{% endblock %}
