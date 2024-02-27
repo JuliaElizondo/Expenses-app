@@ -6,12 +6,15 @@
 
 {% block content %}
 <table>
-    <tr>
-        <th>Date</th>
-        <th>Name</th>
-        <th>Amount</th>
-        <th>Category</th>
-    </tr>
+    <thead>
+        <tr>
+            <th scope="column">Date   </th>
+            <th scope="column">Name   </th>
+            <th scope="column">Amount </th>
+            <th scope="column">Category</th>
+        </tr>
+    </thead>
+    <tbody>
     {% for row in data %}
         <tr>
             <td>{{ row[0] }}</td>
@@ -20,45 +23,47 @@
             <td>{{ row[3] }}</td>
         </tr>
     {% endfor %}
-    <tr>
+    <tr class="total-row">
+        <th scope="row" colspan="2">Total</th>
+        <td>5</td>
         <td></td>
-        <td></td>
-        <td>
-            <button id="redirectButton">Add Expense</button>
-
-            <script>
-                document.getElementById('redirectButton').addEventListener('click', function() {
-                    redirectToAddExpense();
-                });
-
-                function redirectToAddExpense() {
-                    window.location.href = "{{ url_for('add_expense') }}";
-                }
-            </script>
-        </td>
-        <td>
-            <button id="deleteButton">Delete All Expenses</button>
-
-            <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-            <script>
-                $('#deleteButton').on('click', function() {
-                    deleteExpenses();
-                });
-
-                function deleteExpenses() {
-                    $.ajax({
-                        url: '/delete_expense',  
-                        type: 'DELETE',
-                        success: function(response) {
-                            alert('Gastos eliminados exitosamente.');
-                        },
-                        error: function(error) {
-                            alert('Error al eliminar gastos: ' + error.statusText);
-                        }
-                    });
-                }
-            </script>
-        </td>
     </tr>
+    </tbody>
 </table>
+<div class="button-container">
+    <tr class="buttons-row">
+        <button class="button" id="addButton">Add Expense</button>
+
+        <script>
+            document.getElementById('addButton').addEventListener('click', function() {
+                redirectToAddExpense();
+            });
+
+            function redirectToAddExpense() {
+                window.location.href = "{{ url_for('add_expense') }}";
+            }
+        </script>
+        <div class="spacer"></div>
+        <button class="button" id="deleteButton">Delete All Expenses</button>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script>
+            $('#deleteButton').on('click', function() {
+                deleteExpenses();
+            });
+
+            function deleteExpenses() {
+                $.ajax({
+                    url: '/delete_expenses',  
+                    type: 'DELETE',
+                    success: function(response) {
+                        alert('Gastos eliminados exitosamente.');
+                    },
+                    error: function(error) {
+                        alert('Error al eliminar gastos: ' + error.statusText);
+                    }
+                });
+            }
+        </script>
+</div> 
+
 {% endblock %}
