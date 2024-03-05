@@ -19,38 +19,42 @@
         <tr>
             <td>{{ row[0] }}</td>
             <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
+            <td class="amount">{{ row[2] }}</td>
             <td>{{ row[3] }}</td>
         </tr>
     {% endfor %}
     <tr class="total-row">
         <th scope="row" colspan="2">Total</th>
-        <td>5</td>
+        <td id="Total"></td>
         <td></td>
     </tr>
     </tbody>
 </table>
 <div class="button-container">
     <tr class="buttons-row">
-        <button class="button" id="addButton">Add Expense</button>
-
+        <button class="button" id="addButton", onclick=redirectToAddExpense()>Add Expense</button>
         <script>
-            document.getElementById('addButton').addEventListener('click', function() {
-                redirectToAddExpense();
-            });
-
             function redirectToAddExpense() {
                 window.location.href = "{{ url_for('add_expense') }}";
             }
         </script>
         <div class="spacer"></div>
-        <button class="button" id="deleteButton">Delete All Expenses</button>
+        <button class="button" id="updateTotal", onclick=updateTotal()>Update Total</button>
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         <script>
-            $('#deleteButton').on('click', function() {
-                deleteExpenses();
+            function updateTotal() {
+                var suma = 0;
+            $('table tbody td.amount').each(function() {
+                var monto = parseFloat($(this).text()) || 0;
+                suma += monto;
             });
-
+            $('#Total').text(suma.toFixed(2));
+            }
+        </script>
+        <div class="spacer"></div>
+        <button class="button" id="deleteButton", onclick=deleteExpenses()>Delete All Expenses</button>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script>
             function deleteExpenses() {
                 $.ajax({
                     url: '/delete_expenses',  
@@ -62,6 +66,7 @@
                         alert('Error al eliminar gastos: ' + error.statusText);
                     }
                 });
+                location.reload()
             }
         </script>
 </div> 
