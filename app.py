@@ -1,6 +1,4 @@
-import os.path as osp
-import pandas as pd
-from flask import Flask, render_template, g, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from db import db, Expense
 
 app = Flask(__name__, template_folder="templates", static_folder='static')
@@ -32,6 +30,23 @@ def add_expense():
         return redirect(url_for('main_page'))
     else:
         return render_template('add_expense_page.html')
+
+@app.route('/update_expense', methods=['PUT'])
+def update_expense():
+    data = request.get_json()
+    expense_id = data['id']
+    field = data['field']
+    value = data['value']
+
+    expense = Expense.query.get(expense_id)
+
+    if expense:
+        setattr(expense, field, value)  # Actualizar el campo con el nuevo valor
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Expense not found'}), 404
+    
 
 @app.route('/delete_expenses', methods=['DELETE', 'GET'])
 def delete_expenses():
