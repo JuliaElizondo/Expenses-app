@@ -16,11 +16,11 @@
     </thead>
     <tbody>
     {% for expense in data %}
-        <tr>
-            <td>{{ expense.date }}</td>
-            <td>{{ expense.name }}</td>
-            <td class="amount">{{ expense.amount }}</td>
-            <td>{{ expense.category }}</td>
+        <tr data-id="{{ expense.id }}">
+            <td class="editable" data-field="date" contenteditable="true">{{ expense.date }}</td>
+            <td class="editable" data-field="name" contenteditable="true">{{ expense.name }}</td>
+            <td class="editable" data-field="amount" contenteditable="true">{{ expense.amount }}</td>
+            <td class="editable" data-field="category" contenteditable="true">{{ expense.category }}</td>
         </tr>
     {% endfor %}
     <tr class="total-row">
@@ -56,18 +56,6 @@
                 location.reload()
             }
 
-            function updateTotal() {
-                var suma = 0;
-            $('table tbody td.amount').each(function() {
-                var monto = parseFloat($(this).text()) || 0;
-                suma += monto;
-            });
-            
-            $('#Total').text(suma.toFixed(2));
-            }
-            $(document).ready(function() {
-                updateTotal();
-            });
         </script>
 </div> 
 
